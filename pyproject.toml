@@ -1,0 +1,11 @@
+[project]
+name = "check-in"
+version = "0.1.0"
+description = "Add your description here"
+requires-python = ">=3.12"
+dependencies = [
+    "cloudscraper>=1.2.71",
+    "drissionpage>=4.1.1.2",
+    "playwright>=1.57.0",
+    "requests>=2.32.5",
+]

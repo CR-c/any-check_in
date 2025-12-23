@@ -1,0 +1,53 @@
+name: Anyroute Daily Check-in
+
+on:
+  # 定时执行：每8小时执行一次（北京时间 8:00, 16:00, 0:00）
+  schedule:
+    - cron: '0 0 * * *'   # UTC 0:00 = 北京时间 8:00
+    - cron: '0 8 * * *'   # UTC 8:00 = 北京时间 16:00
+    - cron: '0 16 * * *'  # UTC 16:00 = 北京时间 0:00
+
+  # 支持手动触发
+  workflow_dispatch:
+
+jobs:
+  checkin:
+    runs-on: ubuntu-latest
+
+    env:
+      TZ: Asia/Shanghai
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Show current time
+        run: |
+          echo "当前时间: $(date '+%Y-%m-%d %H:%M:%S %Z')"
+
+      - name: Run check-in script
+        env:
+          ANYROUTE_EMAIL: ${{ secrets.ANYROUTE_EMAIL }}
+          ANYROUTE_PASSWORD: ${{ secrets.ANYROUTE_PASSWORD }}
+          ANYROUTE_BASE_URL: ${{ secrets.ANYROUTE_BASE_URL }}
+        run: |
+          python checkin.py
+
+      - name: Check-in completed
+        if: success()
+        run: echo "✓ Check-in completed successfully at $(date '+%Y-%m-%d %H:%M:%S %Z')"
+
+      - name: Check-in failed
+        if: failure()
+        run: echo "✗ Check-in failed at $(date '+%Y-%m-%d %H:%M:%S %Z'). Please check the logs."

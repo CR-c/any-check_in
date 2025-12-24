@@ -715,7 +715,7 @@ async def main_async():
         print("  EMAIL_TO=recipient@example.com")
         return False
 
-    base_url = os.environ.get('ANYROUTE_BASE_URL')
+    base_url = os.environ.get('ANYROUTE_BASE_URL') or 'https://anyrouter.top'
     headless = os.environ.get('HEADLESS', 'true').lower() == 'true'
 
     # 执行签到

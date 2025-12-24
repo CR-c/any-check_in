@@ -34,8 +34,7 @@ jobs:
       - name: Install dependencies
         run: |
           uv sync
-          uv run playwright install chromium
-          uv run playwright install-deps chromium
+          uv run playwright install --with-deps chromium
 
       - name: Show current time
         run: |

@@ -1,11 +1,14 @@
 name: Anyroute Daily Check-in
 
 on:
-  # 定时执行：每8小时执行一次（北京时间 8:00, 16:00, 0:00）
+  # 定时执行：每4小时执行一次
   schedule:
     - cron: '0 0 * * *'   # UTC 0:00 = 北京时间 8:00
+    - cron: '0 4 * * *'   # UTC 4:00 = 北京时间 12:00
     - cron: '0 8 * * *'   # UTC 8:00 = 北京时间 16:00
+    - cron: '0 12 * * *'  # UTC 12:00 = 北京时间 20:00
     - cron: '0 16 * * *'  # UTC 16:00 = 北京时间 0:00
+    - cron: '0 20 * * *'  # UTC 20:00 = 北京时间 4:00
 
   # 支持手动触发
   workflow_dispatch:
@@ -42,9 +45,23 @@ jobs:
 
       - name: Run check-in script
         env:
+          # 多账号模式（推荐）：设置 ACCOUNTS secret，格式为 JSON 数组
+          # 示例：[{"name":"账号1","email":"user1","password":"pass1"},{"name":"账号2","email":"user2","password":"pass2"}]
+          ACCOUNTS: ${{ secrets.ACCOUNTS }}
+
+          # 单账号模式（兼容模式）：设置 ANYROUTE_EMAIL 和 ANYROUTE_PASSWORD
           ANYROUTE_EMAIL: ${{ secrets.ANYROUTE_EMAIL }}
           ANYROUTE_PASSWORD: ${{ secrets.ANYROUTE_PASSWORD }}
+
+          # 可选配置
           ANYROUTE_BASE_URL: ${{ secrets.ANYROUTE_BASE_URL }}
+
+          # 邮件通知配置（可选）
+          SMTP_SERVER: ${{ secrets.SMTP_SERVER }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+          EMAIL_TO: ${{ secrets.EMAIL_TO }}
         run: |
           uv run python checkin.py
 

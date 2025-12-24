@@ -5,7 +5,11 @@ import os
 import sys
 import json
 import asyncio
+import smtplib
 from datetime import datetime
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from email.header import Header
 from camoufox.async_api import AsyncCamoufox
 
 
@@ -19,8 +23,121 @@ def log(message):
         print(f"[{timestamp}] {safe_msg}")
 
 
+def send_email(results):
+    """发送签到结果邮件通知"""
+    # 读取邮件配置
+    smtp_server = os.environ.get('SMTP_SERVER')
+    smtp_port = int(os.environ.get('SMTP_PORT', '587'))
+    smtp_user = os.environ.get('SMTP_USER')
+    smtp_password = os.environ.get('SMTP_PASSWORD')
+    email_to = os.environ.get('EMAIL_TO')
+
+    # 如果没有配置邮件，则跳过
+    if not all([smtp_server, smtp_user, smtp_password, email_to]):
+        log("未配置邮件发送，跳过邮件通知")
+        return False
+
+    try:
+        # 统计结果
+        success_count = sum(1 for r in results if r['success'])
+        fail_count = len(results) - success_count
+        current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
+        # 构建邮件内容
+        subject = f"Anyrouter 签到报告 - {current_time}"
+
+        # HTML 邮件正文
+        html_body = f"""
+        <html>
+        <head>
+            <style>
+                body {{ font-family: Arial, sans-serif; }}
+                .summary {{ background-color: #f0f0f0; padding: 15px; border-radius: 5px; margin: 10px 0; }}
+                .success {{ color: #28a745; }}
+                .fail {{ color: #dc3545; }}
+                table {{ border-collapse: collapse; width: 100%; margin: 20px 0; }}
+                th, td {{ border: 1px solid #ddd; padding: 12px; text-align: left; }}
+                th {{ background-color: #4CAF50; color: white; }}
+                tr:nth-child(even) {{ background-color: #f2f2f2; }}
+            </style>
+        </head>
+        <body>
+            <h2>Anyrouter 自动签到报告</h2>
+            <div class="summary">
+                <p><strong>执行时间：</strong>{current_time}</p>
+                <p><strong>总计账号：</strong>{len(results)} 个</p>
+                <p class="success"><strong>✓ 成功：</strong>{success_count} 个</p>
+                <p class="fail"><strong>✗ 失败：</strong>{fail_count} 个</p>
+            </div>
+
+            <h3>详细结果</h3>
+            <table>
+                <tr>
+                    <th>账号名称</th>
+                    <th>签到结果</th>
+                    <th>账户余额</th>
+                </tr>
+        """
+
+        for result in results:
+            status_color = "success" if result['success'] else "fail"
+            status_text = "✓ 成功" if result['success'] else "✗ 失败"
+            quota_info = result.get('quota_info', '')
+
+            html_body += f"""
+                <tr>
+                    <td>{result['name']}</td>
+                    <td class="{status_color}">{status_text}</td>
+                    <td>{quota_info}</td>
+                </tr>
+            """
+
+        html_body += """
+            </table>
+            <hr>
+            <p style="color: #666; font-size: 12px;">
+                此邮件由 Anyrouter 自动签到脚本自动发送
+            </p>
+        </body>
+        </html>
+        """
+
+        # 创建邮件
+        message = MIMEMultipart('alternative')
+        message['From'] = Header(f"Anyrouter 签到 <{smtp_user}>", 'utf-8')
+        message['To'] = Header(email_to, 'utf-8')
+        message['Subject'] = Header(subject, 'utf-8')
+
+        # 添加 HTML 内容
+        html_part = MIMEText(html_body, 'html', 'utf-8')
+        message.attach(html_part)
+
+        # 发送邮件
+        log(f"正在发送邮件到 {email_to}...")
+
+        # 根据端口选择连接方式
+        if smtp_port == 465:
+            # SSL
+            server = smtplib.SMTP_SSL(smtp_server, smtp_port)
+        else:
+            # TLS (587) 或其他
+            server = smtplib.SMTP(smtp_server, smtp_port)
+            server.starttls()
+
+        server.login(smtp_user, smtp_password)
+        server.sendmail(smtp_user, email_to.split(','), message.as_string())
+        server.quit()
+
+        log("[OK] 邮件发送成功")
+        return True
+
+    except Exception as e:
+        log(f"[FAIL] 邮件发送失败: {str(e)}")
+        return False
+
+
 class AnyrouteCheckin:
-    def __init__(self, email, password, base_url=None, headless=True):
+    def __init__(self, email, password, base_url=None, headless=True, account_name=None):
         self.email = email
         self.password = password
         self.base_url = base_url or os.environ.get('ANYROUTE_BASE_URL', 'https://anyrouter.top')
@@ -28,6 +145,7 @@ class AnyrouteCheckin:
         self.headless = headless
         self.page = None
         self.browser = None
+        self.account_name = account_name or email
 
     async def _init_browser(self):
         """初始化浏览器"""
@@ -380,7 +498,7 @@ class AnyrouteCheckin:
     async def run(self):
         """运行签到流程"""
         print("=" * 50)
-        print("Anyrouter 自动签到脚本 (Camoufox)")
+        print(f"账号: {self.account_name}")
         print(f"目标网站: {self.base_url}")
         print(f"Headless 模式: {self.headless}")
         print("=" * 50)
@@ -390,38 +508,167 @@ class AnyrouteCheckin:
 
             if not await self.login():
                 log("程序终止：登录失败")
-                return False
+                return False, None
 
             checkin_success = await self.checkin()
-            await self.get_user_info()
+            user_info = await self.get_user_info()
 
             if not checkin_success:
                 log("程序终止：签到失败")
-                return False
+                return False, None
 
             print("=" * 50)
             log("[OK] 签到流程完成")
             print("=" * 50)
-            return True
+            return True, user_info
 
         finally:
             await self._close_browser()
 
 
-def main():
+def load_accounts():
+    """从环境变量加载账号配置"""
+    # 优先使用 ACCOUNTS 配置（支持多账号）
+    accounts_json = os.environ.get('ACCOUNTS')
+    if accounts_json:
+        try:
+            accounts = json.loads(accounts_json)
+            if not isinstance(accounts, list):
+                print("错误: ACCOUNTS 必须是 JSON 数组格式")
+                return None
+
+            # 验证每个账号的格式
+            for i, account in enumerate(accounts):
+                if not isinstance(account, dict):
+                    print(f"错误: ACCOUNTS[{i}] 必须是对象")
+                    return None
+                if 'email' not in account or 'password' not in account:
+                    print(f"错误: ACCOUNTS[{i}] 缺少 email 或 password 字段")
+                    return None
+
+                # 设置默认 name
+                if 'name' not in account:
+                    account['name'] = account['email']
+
+            return accounts
+        except json.JSONDecodeError as e:
+            print(f"错误: ACCOUNTS JSON 解析失败: {e}")
+            return None
+
+    # 兼容单账号模式
     email = os.environ.get('ANYROUTE_EMAIL')
     password = os.environ.get('ANYROUTE_PASSWORD')
+
+    if email and password:
+        return [{
+            'name': email,
+            'email': email,
+            'password': password
+        }]
+
+    return None
+
+
+async def run_account_checkin(account, base_url, headless):
+    """运行单个账号的签到"""
+    checkin = AnyrouteCheckin(
+        email=account['email'],
+        password=account['password'],
+        base_url=base_url,
+        headless=headless,
+        account_name=account['name']
+    )
+    return await checkin.run()
+
+
+async def main_async():
+    """异步主函数"""
+    # 加载账号配置
+    accounts = load_accounts()
+    if not accounts:
+        print("错误: 请设置环境变量 ACCOUNTS 或 ANYROUTE_EMAIL 和 ANYROUTE_PASSWORD")
+        print("\n多账号模式（ACCOUNTS）:")
+        print('  ACCOUNTS=\'[{"name":"账号1","email":"user1","password":"pass1"},{"name":"账号2","email":"user2","password":"pass2"}]\'')
+        print("\n单账号模式（兼容模式）:")
+        print("  ANYROUTE_EMAIL=your_email")
+        print("  ANYROUTE_PASSWORD=your_password")
+        print("\n可选配置:")
+        print("  ANYROUTE_BASE_URL (默认: https://anyrouter.top)")
+        print("  HEADLESS=false (显示浏览器窗口)")
+        print("\n邮件通知配置（可选）:")
+        print("  SMTP_SERVER=smtp.gmail.com")
+        print("  SMTP_PORT=587")
+        print("  SMTP_USER=your_email@gmail.com")
+        print("  SMTP_PASSWORD=your_app_password")
+        print("  EMAIL_TO=recipient@example.com")
+        return False
+
     base_url = os.environ.get('ANYROUTE_BASE_URL')
     headless = os.environ.get('HEADLESS', 'true').lower() == 'true'
 
-    if not email or not password:
-        print("错误: 请设置环境变量 ANYROUTE_EMAIL 和 ANYROUTE_PASSWORD")
-        print("可选: ANYROUTE_BASE_URL (默认: https://anyrouter.top)")
-        print("可选: HEADLESS=false (显示浏览器窗口)")
-        sys.exit(1)
+    # 执行签到
+    print("\n" + "=" * 50)
+    print("Anyrouter 自动签到脚本 (Camoufox)")
+    print(f"共 {len(accounts)} 个账号")
+    print("=" * 50 + "\n")
 
-    checkin = AnyrouteCheckin(email, password, base_url, headless)
-    success = asyncio.run(checkin.run())
+    results = []
+    for i, account in enumerate(accounts, 1):
+        print(f"\n开始处理第 {i}/{len(accounts)} 个账号...")
+        try:
+            success, user_info = await run_account_checkin(account, base_url, headless)
+
+            # 格式化余额信息
+            quota_info = ""
+            if user_info:
+                quota_info = f"${user_info.get('quota', 0)}"
+
+            results.append({
+                'name': account['name'],
+                'success': success,
+                'quota_info': quota_info
+            })
+        except Exception as e:
+            log(f"账号 {account['name']} 处理异常: {e}")
+            results.append({
+                'name': account['name'],
+                'success': False,
+                'quota_info': ''
+            })
+
+        # 账号之间等待一段时间，避免请求过快
+        if i < len(accounts):
+            await asyncio.sleep(3)
+
+    # 打印汇总结果
+    print("\n" + "=" * 50)
+    print("签到汇总")
+    print("=" * 50)
+
+    success_count = sum(1 for r in results if r['success'])
+    fail_count = len(results) - success_count
+
+    for result in results:
+        status = "[OK] 成功" if result['success'] else "[FAIL] 失败"
+        quota_text = f" - 余额: {result['quota_info']}" if result['quota_info'] else ""
+        print(f"  {result['name']}: {status}{quota_text}")
+
+    print(f"\n总计: {len(results)} 个账号")
+    print(f"  成功: {success_count}")
+    print(f"  失败: {fail_count}")
+    print("=" * 50)
+
+    # 发送邮件通知
+    if success_count > 0:  # 只有成功的签到才发送邮件
+        print("\n" + "=" * 50)
+        send_email(results)
+        print("=" * 50)
+
+    return fail_count == 0
+
+
+def main():
+    success = asyncio.run(main_async())
     sys.exit(0 if success else 1)
 
 

@@ -21,7 +21,8 @@
       "Bash(del \"D:\\\\code\\\\check-in\\\\requirements.txt\")",
       "Bash(uv sync:*)",
       "Bash(ANYROUTE_EMAIL=\"dtymmo\" ANYROUTE_PASSWORD=\"Any192102-\" HEADLESS=\"false\" uv run python:*)",
-      "Bash(tee:*)"
+      "Bash(tee:*)",
+      "Bash(ACCOUNTS='[{\"name\":\"测试账号1\",\"email\":\"evacc\",\"password\":\"Any192102-\"},{\"name\":\"测试账号2\",\"email\":\"dtymmo\",\"password\":\"Any192102-\"}]' HEADLESS=\"false\" uv run python:*)"
     ]
   }
 }

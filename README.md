@@ -1,11 +1,13 @@
 # Anyrouter 自动签到
 
-自动签到 anyrouter.top 的工具，支持邮箱账号密码登录，使用 Playwright 实现自动化。
+自动签到 anyrouter.top 的工具，支持邮箱账号密码登录，使用 Camoufox 实现自动化。
 
 ## 功能特性
 
-- ✅ 自动每日签到（每8小时执行一次）
+- ✅ 自动每日签到（每4小时执行一次）
 - ✅ 邮箱密码登录（非 OAuth）
+- ✅ 支持多账号签到
+- ✅ 邮件通知签到结果
 - ✅ GitHub Actions 自动执行
 - ✅ 支持手动触发
 - ✅ 登录失败自动重试（最多3次）
@@ -22,7 +24,37 @@
 
 #### 2. 配置 GitHub Secrets
 
-在你 fork 的仓库中，进入 **Settings** → **Secrets and variables** → **Actions**，添加以下 secrets：
+在你 fork 的仓库中，进入 **Settings** → **Secrets and variables** → **Actions**，添加 secrets。
+
+##### 选项一：多账号模式（推荐）
+
+| Secret 名称 | 说明 | 必填 | 示例 |
+|------------|------|------|------|
+| `ACCOUNTS` | 多个账号的 JSON 数组配置 | ✅ 是 | 见下方示例 |
+| `ANYROUTE_BASE_URL` | 网站地址 | ❌ 否 | `https://anyrouter.top` (默认值) |
+
+**ACCOUNTS 格式示例：**
+```json
+[
+  {
+    "name": "主账号",
+    "email": "user1@example.com",
+    "password": "password1"
+  },
+  {
+    "name": "备用账号",
+    "email": "user2",
+    "password": "password2"
+  }
+]
+```
+
+**说明：**
+- `name`：账号名称（可选），用于日志显示，不填则默认使用 email
+- `email`：anyrouter.top 登录邮箱或用户名
+- `password`：anyrouter.top 登录密码
+
+##### 选项二：单账号模式（兼容模式）
 
 | Secret 名称 | 说明 | 必填 | 示例 |
 |------------|------|------|------|
@@ -30,7 +62,47 @@
 | `ANYROUTE_PASSWORD` | anyrouter.top 登录密码 | ✅ 是 | `your-password` |
 | `ANYROUTE_BASE_URL` | 网站地址 | ❌ 否 | `https://anyrouter.top` (默认值) |
 
-**添加步骤：**
+##### 选项三：邮件通知配置（可选）
+
+如果需要接收签到结果的邮件通知，添加以下 secrets：
+
+| Secret 名称 | 说明 | 必填 | 示例 |
+|------------|------|------|------|
+| `SMTP_SERVER` | SMTP 服务器地址 | ✅ 是 | `smtp.gmail.com` / `smtp.qq.com` |
+| `SMTP_PORT` | SMTP 端口 | ✅ 是 | `587` (TLS) / `465` (SSL) |
+| `SMTP_USER` | 发件人邮箱 | ✅ 是 | `your_email@gmail.com` |
+| `SMTP_PASSWORD` | 邮箱授权码 | ✅ 是 | 见下方说明 |
+| `EMAIL_TO` | 收件人邮箱 | ✅ 是 | `recipient@example.com` |
+
+**常用邮箱 SMTP 配置：**
+
+| 邮箱服务商 | SMTP 服务器 | 端口 | 说明 |
+|-----------|------------|------|------|
+| Gmail | smtp.gmail.com | 587 | 需要开启"两步验证"并生成"应用专用密码" |
+| QQ 邮箱 | smtp.qq.com | 587 | 需要在设置中开启 SMTP 服务并获取授权码 |
+| 163 邮箱 | smtp.163.com | 465 | 需要在设置中开启 SMTP 服务并获取授权码 |
+| Outlook | smtp-mail.outlook.com | 587 | 直接使用账号密码 |
+
+**如何获取邮箱授权码：**
+- **Gmail**: Settings → Security → 2-Step Verification → App passwords
+- **QQ 邮箱**: 设置 → 账户 → POP3/IMAP/SMTP/Exchange/CardDAV/CalDAV 服务 → 开启 SMTP 服务 → 生成授权码
+- **163 邮箱**: 设置 → POP3/SMTP/IMAP → 开启 SMTP 服务 → 设置授权密码
+
+**邮件通知内容包括：**
+- ✅ 签到执行时间
+- ✅ 账号签到结果（成功/失败）
+- ✅ 每个账号的余额信息
+- ✅ 签到统计汇总
+
+**添加步骤（多账号模式）：**
+1. 进入仓库的 **Settings** 页面
+2. 在左侧菜单选择 **Secrets and variables** → **Actions**
+3. 点击 **New repository secret**
+4. 在 **Name** 中输入 `ACCOUNTS`
+5. 在 **Secret** 中输入 JSON 数组（格式见上方示例）
+6. 点击 **Add secret**
+
+**添加步骤（单账号模式）：**
 1. 进入仓库的 **Settings** 页面
 2. 在左侧菜单选择 **Secrets and variables** → **Actions**
 3. 点击 **New repository secret**
@@ -64,10 +136,13 @@
 
 ## 自动执行时间
 
-脚本每 **8 小时** 自动执行一次：
+脚本每 **4 小时** 自动执行一次：
 - 🕗 **北京时间 08:00**（UTC 0:00）
+- 🕛 **北京时间 12:00**（UTC 4:00）
 - 🕓 **北京时间 16:00**（UTC 8:00）
+- 🕗 **北京时间 20:00**（UTC 12:00）
 - 🕛 **北京时间 00:00**（UTC 16:00）
+- 🕓 **北京时间 04:00**（UTC 20:00）
 
 ### 自定义执行时间
 
@@ -76,8 +151,11 @@
 ```yaml
 schedule:
   - cron: '0 0 * * *'   # UTC 0:00 = 北京时间 8:00
+  - cron: '0 4 * * *'   # UTC 4:00 = 北京时间 12:00
   - cron: '0 8 * * *'   # UTC 8:00 = 北京时间 16:00
+  - cron: '0 12 * * *'  # UTC 12:00 = 北京时间 20:00
   - cron: '0 16 * * *'  # UTC 16:00 = 北京时间 0:00
+  - cron: '0 20 * * *'  # UTC 20:00 = 北京时间 4:00
 ```
 
 **Cron 表达式说明：**
@@ -99,18 +177,33 @@ schedule:
 ### 1. 安装依赖
 
 ```bash
-# 使用 pip
-pip install -r requirements.txt
-playwright install chromium
-
-# 或使用 uv（更快）
+# 使用 uv（推荐）
 uv sync
-uv run playwright install chromium
+uv run camoufox fetch
+
+# 或使用 pip
+pip install -r requirements.txt
 ```
 
 ### 2. 配置环境变量
 
-**Linux/Mac：**
+**多账号模式（Linux/Mac）：**
+```bash
+export ACCOUNTS='[{"name":"账号1","email":"user1@example.com","password":"pass1"},{"name":"账号2","email":"user2","password":"pass2"}]'
+
+# 可选：显示浏览器窗口（用于调试）
+export HEADLESS="false"
+```
+
+**多账号模式（Windows PowerShell）：**
+```powershell
+$env:ACCOUNTS='[{"name":"账号1","email":"user1@example.com","password":"pass1"},{"name":"账号2","email":"user2","password":"pass2"}]'
+
+# 可选：显示浏览器窗口（用于调试）
+$env:HEADLESS="false"
+```
+
+**单账号模式（Linux/Mac）：**
 ```bash
 export ANYROUTE_EMAIL="your-email@example.com"
 export ANYROUTE_PASSWORD="your-password"
@@ -119,7 +212,7 @@ export ANYROUTE_PASSWORD="your-password"
 export HEADLESS="false"
 ```
 
-**Windows PowerShell：**
+**单账号模式（Windows PowerShell）：**
 ```powershell
 $env:ANYROUTE_EMAIL="your-email@example.com"
 $env:ANYROUTE_PASSWORD="your-password"
@@ -128,12 +221,21 @@ $env:ANYROUTE_PASSWORD="your-password"
 $env:HEADLESS="false"
 ```
 
-**或使用 .env 文件：**
+**邮件通知配置（可选）：**
 ```bash
-# 复制示例文件
-cp .env.example .env
+# Linux/Mac
+export SMTP_SERVER="smtp.gmail.com"
+export SMTP_PORT="587"
+export SMTP_USER="your_email@gmail.com"
+export SMTP_PASSWORD="your_app_password"
+export EMAIL_TO="recipient@example.com"
 
-# 编辑 .env 文件，填入你的账号密码
+# Windows PowerShell
+$env:SMTP_SERVER="smtp.gmail.com"
+$env:SMTP_PORT="587"
+$env:SMTP_USER="your_email@gmail.com"
+$env:SMTP_PASSWORD="your_app_password"
+$env:EMAIL_TO="recipient@example.com"
 ```
 
 ### 3. 运行脚本
@@ -166,10 +268,10 @@ HEADLESS=false python checkin.py
 
 ### 登录机制
 
-- 程序使用 Playwright 模拟浏览器登录
+- 程序使用 Camoufox（增强的反检测浏览器）模拟登录
 - 支持邮箱或用户名登录
 - 登录失败时自动重试（最多3次）
-- 第一次登录可能触发网站的防护机制，重试后通常可成功
+- 签到在登录时自动完成
 
 ## 故障排查
 
@@ -203,10 +305,11 @@ HEADLESS=false python checkin.py
 
 ### 本地测试失败
 
-1. **Playwright 未安装**
+1. **Camoufox 未安装**
    ```bash
-   playwright install chromium
-   playwright install-deps  # Linux 需要
+   uv run camoufox fetch
+   # 或者使用 pip
+   python -m camoufox fetch
    ```
 
 2. **环境变量未设置**
@@ -214,11 +317,15 @@ HEADLESS=false python checkin.py
    # 检查环境变量
    echo $ANYROUTE_EMAIL
    echo $ANYROUTE_PASSWORD
+   # 或者检查多账号配置
+   echo $ACCOUNTS
    ```
 
 3. **依赖问题**
    ```bash
-   # 重新安装依赖
+   # 使用 uv 重新同步
+   uv sync
+   # 或使用 pip 重新安装
    pip install -r requirements.txt --force-reinstall
    ```
 
@@ -226,14 +333,14 @@ HEADLESS=false python checkin.py
 
 本脚本使用以下操作：
 
-- **登录**：访问 `/login` 页面，使用 Playwright 自动填写表单并提交
-- **签到**：`POST /api/user/sign_in/{user_id}`
+- **登录**：访问 `/login` 页面，使用 Camoufox 自动填写表单并提交
+- **签到**：`POST /api/user/sign_in`（登录时自动完成）
 - **用户信息**：`GET /api/user/self`
 
 ## 技术栈
 
 - Python 3.11+
-- Playwright（浏览器自动化）
+- Camoufox（反检测浏览器自动化）
 - GitHub Actions（CI/CD）
 
 ## 项目结构
@@ -252,6 +359,18 @@ HEADLESS=false python checkin.py
 
 ## 更新日志
 
+### v1.2.0 (2025-12-24)
+- ✨ 新增邮件通知功能
+- ✨ 调整执行频率为每4小时一次
+- ✅ 邮件显示签到结果和余额信息
+- ✅ 支持多种邮箱服务（Gmail、QQ、163 等）
+
+### v1.1.0 (2025-12-24)
+- ✨ 新增多账号签到支持
+- ✨ 迁移到 Camoufox 浏览器自动化（增强反检测）
+- ✨ 优化签到 API 调用
+- ✅ 保持向后兼容单账号模式
+
 ### v1.0.0 (2025-12-23)
 - ✨ 初始版本发布
 - ✅ 支持邮箱密码登录
@@ -265,10 +384,20 @@ HEADLESS=false python checkin.py
 A: 网站有防护机制，第一次登录可能触发验证。程序会自动重试，通常第2-3次可成功。
 
 **Q: 多久签到一次比较好？**
-A: 建议每天2-3次，过于频繁可能被限制。默认配置是每8小时一次。
+A: 建议每天4-6次，过于频繁可能被限制。默认配置是每4小时一次。
 
 **Q: 可以同时管理多个账号吗？**
-A: 可以。fork 多个仓库，每个仓库配置不同的 Secrets 即可。
+A: 可以！使用 `ACCOUNTS` secret 配置多个账号的 JSON 数组即可。程序会自动依次为每个账号签到。
+
+**Q: 如何设置邮件通知？**
+A: 在 GitHub Secrets 中添加 `SMTP_SERVER`、`SMTP_PORT`、`SMTP_USER`、`SMTP_PASSWORD` 和 `EMAIL_TO` 即可。支持 Gmail、QQ 邮箱、163 邮箱等常见邮箱服务。
+
+**Q: 邮件通知发送失败怎么办？**
+A:
+1. 检查 SMTP 配置是否正确（服务器地址、端口）
+2. 确认使用的是邮箱授权码，而不是登录密码
+3. Gmail 用户需要开启"两步验证"并生成"应用专用密码"
+4. QQ/163 邮箱需要在设置中开启 SMTP 服务并获取授权码
 
 **Q: GitHub Actions 有使用限制吗？**
 A: 公开仓库的 GitHub Actions 是免费的，每月有 2000 分钟的免费额度（私有仓库）。

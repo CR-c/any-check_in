@@ -674,12 +674,15 @@ def load_accounts():
     return None
 
 
-async def run_account_checkin(account, base_url, headless):
+async def run_account_checkin(account, default_base_url, headless):
     """运行单个账号的签到"""
+    # 优先使用账号自己的 url，否则使用默认 url
+    account_url = account.get('url') or default_base_url
+
     checkin = AnyrouteCheckin(
         email=account['email'],
         password=account['password'],
-        base_url=base_url,
+        base_url=account_url,
         headless=headless,
         account_name=account['name']
     )

@@ -40,20 +40,23 @@
   {
     "name": "主账号",
     "email": "user1@example.com",
-    "password": "password1"
+    "password": "password1",
+    "url": "https://anyrouter.top"
   },
   {
     "name": "备用账号",
     "email": "user2",
-    "password": "password2"
+    "password": "password2",
+    "url": "https://another-site.com"
   }
 ]
 ```
 
 **说明：**
 - `name`：账号名称（可选），用于日志显示，不填则默认使用 email
-- `email`：anyrouter.top 登录邮箱或用户名
-- `password`：anyrouter.top 登录密码
+- `email`：登录邮箱或用户名
+- `password`：登录密码
+- `url`：目标网站地址（可选），不填则使用默认值或 `ANYROUTE_BASE_URL` 环境变量，默认为 `https://anyrouter.top`
 
 ##### 选项二：单账号模式（兼容模式）
 
@@ -198,7 +201,7 @@ pip install -r requirements.txt
 
 **多账号模式（Linux/Mac）：**
 ```bash
-export ACCOUNTS='[{"name":"账号1","email":"user1@example.com","password":"pass1"},{"name":"账号2","email":"user2","password":"pass2"}]'
+export ACCOUNTS='[{"name":"账号1","email":"user1@example.com","password":"pass1","url":"https://anyrouter.top"},{"name":"账号2","email":"user2","password":"pass2","url":"https://another-site.com"}]'
 
 # 可选：显示浏览器窗口（用于调试）
 export HEADLESS="false"
@@ -206,11 +209,13 @@ export HEADLESS="false"
 
 **多账号模式（Windows PowerShell）：**
 ```powershell
-$env:ACCOUNTS='[{"name":"账号1","email":"user1@example.com","password":"pass1"},{"name":"账号2","email":"user2","password":"pass2"}]'
+$env:ACCOUNTS='[{"name":"账号1","email":"user1@example.com","password":"pass1","url":"https://anyrouter.top"},{"name":"账号2","email":"user2","password":"pass2","url":"https://another-site.com"}]'
 
 # 可选：显示浏览器窗口（用于调试）
 $env:HEADLESS="false"
 ```
+
+**说明：** `url` 字段可选，不填则使用默认值 `https://anyrouter.top`
 
 **单账号模式（Linux/Mac）：**
 ```bash
@@ -380,6 +385,13 @@ HEADLESS=false python checkin.py
 ```
 
 ## 更新日志
+
+### v1.3.0 (2025-12-24)
+- ✨ 新增智能跳过重复签到功能（当天成功后自动跳过）
+- ✨ 支持账号级别的 URL 配置（每个账号可使用不同网站）
+- 🐛 修复 SMTP_PORT 为空时无法解析的问题
+- 🐛 修复邮件发送失败导致整体失败的问题
+- 🐛 修复 base_url 为空时无法使用默认值的问题
 
 ### v1.2.0 (2025-12-24)
 - ✨ 新增邮件通知功能

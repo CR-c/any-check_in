@@ -1,0 +1,27 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git init:*)",
+      "mcp__github__get_file_contents",
+      "Bash(uv init:*)",
+      "Bash(uv add:*)",
+      "Bash($env:ANYROUTE_EMAIL=\"evacc\")",
+      "Bash($env:ANYROUTE_PASSWORD=\"Any192102-\")",
+      "Bash(uv run python:*)",
+      "Bash(ANYROUTE_EMAIL=\"evacc\" ANYROUTE_PASSWORD=\"Any192102-\" uv run python:*)",
+      "Bash(uv run:*)",
+      "Bash(ANYROUTE_EMAIL=\"evacc\" ANYROUTE_PASSWORD=\"Any192102-\" HEADLESS=\"false\" uv run python:*)",
+      "Bash(ANYROUTE_EMAIL=\"eavcc\" ANYROUTE_PASSWORD=\"Any19210-\" HEADLESS=\"false\" uv run python:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git remote add:*)",
+      "Bash(git branch:*)",
+      "Bash(git push:*)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(del \"D:\\\\code\\\\check-in\\\\requirements.txt\")",
+      "Bash(uv sync:*)",
+      "Bash(ANYROUTE_EMAIL=\"dtymmo\" ANYROUTE_PASSWORD=\"Any192102-\" HEADLESS=\"false\" uv run python:*)",
+      "Bash(tee:*)"
+    ]
+  }
+}

@@ -1,0 +1,105 @@
+[2025-12-24 08:42:57] 初始化浏览器...
+[2025-12-24 08:43:04] 访问登录页面: https://anyrouter.top/login
+[2025-12-24 08:43:04] [REQ] GET https://anyrouter.top/login
+[2025-12-24 08:43:06] 等待页面渲染...
+[2025-12-24 08:43:06] [REQ] GET https://anyrouter.top/login
+[2025-12-24 08:43:07] [REQ] GET https://anyrouter.top/assets/index-DroxvxgR.js
+[2025-12-24 08:43:07] [REQ] GET https://anyrouter.top/assets/react-core-DtMAePju.js
+[2025-12-24 08:43:07] [REQ] GET https://anyrouter.top/assets/semi-ui-_MEBl3Ck.js
+[2025-12-24 08:43:07] [REQ] GET https://anyrouter.top/assets/tools-DEwWW26K.js
+[2025-12-24 08:43:07] [REQ] GET https://anyrouter.top/assets/react-components-XvIrFW7f.js
+[2025-12-24 08:43:07] [REQ] GET https://anyrouter.top/assets/i18n-DLB4mkEj.js
+[2025-12-24 08:43:07] [REQ] GET https://anyrouter.top/assets/semantic-BBNwh2dL.js
+[2025-12-24 08:43:07] [REQ] GET https://anyrouter.top/assets/semi-ui-yRXI6evF.css
+[2025-12-24 08:43:07] [REQ] GET https://anyrouter.top/assets/index-Do9owgQL.css
+[2025-12-24 08:43:08] [REQ] GET https://anyrouter.top/api/notice
+[2025-12-24 08:43:08] [REQ] GET https://anyrouter.top/api/status
+[2025-12-24 08:43:08] [REQ] GET https://anyrouter.top/logo.png
+[2025-12-24 08:43:08] [RES] 200 https://anyrouter.top/api/notice
+[2025-12-24 08:43:08]    JSON: {"data":"\u003cbr /\u003e\n\u003ccenter style=\"font-size: 3em\"\u003e\u003cb\u003e\u003c/b\u003e\u003c/center\u003e\n\u003cbr /\u003e\u003cbr /\u003e\n\n\u003ccenter style=\"font-size: 1.5em\"\u...
+[2025-12-24 08:43:08] [REQ] GET https://anyrouter.top/api/notice
+[2025-12-24 08:43:09] [RES] 200 https://anyrouter.top/api/status
+[2025-12-24 08:43:09]    JSON: {"data":{"announcements":[{"content":"Claude Opus 4.5 模型现已发布，使用 npm i -g @anthropic-ai/claude-code 更新最新版本 Claude Code 并使用 /model 选择 opus 4.5 体验最新模型","extra":"","id":22,"publishDate":"2025-11-25T00:06:...
+[2025-12-24 08:43:09] [REQ] GET https://anyrouter.top/logo.png
+[2025-12-24 08:43:09] 检查并关闭弹窗...
+[2025-12-24 08:43:09] [RES] 200 https://anyrouter.top/api/notice
+[2025-12-24 08:43:09]    JSON: {"data":"\u003cbr /\u003e\n\u003ccenter style=\"font-size: 3em\"\u003e\u003cb\u003e\u003c/b\u003e\u003c/center\u003e\n\u003cbr /\u003e\u003cbr /\u003e\n\n\u003ccenter style=\"font-size: 1.5em\"\u...
+[2025-12-24 08:43:13] 填写用户名...
+[2025-12-24 08:43:15] 已填写用户名: evacc
+[2025-12-24 08:43:15] 填写密码...
+[2025-12-24 08:43:16] 已填写密码
+[2025-12-24 08:43:17] 点击继续按钮...
+[2025-12-24 08:43:18] [REQ] POST https://anyrouter.top/api/user/login?turnstile=
+[2025-12-24 08:43:18] 已点击继续按钮
+[2025-12-24 08:43:18] 等待登录完成...
+[2025-12-24 08:43:18] [RES] 200 https://anyrouter.top/api/user/login?turnstile=
+[2025-12-24 08:43:18]    JSON: {"data":{"id":91843,"username":"evacc","password":"","original_password":"","display_name":"evacc","role":1,"status":1,"email":"","github_id":"","github_user_id":0,"oidc_id":"","wechat_id":"","telegra...
+[2025-12-24 08:43:18] [REQ] GET https://anyrouter.top/assets/index-BQPsr37G.js
+[2025-12-24 08:43:18] [REQ] GET https://anyrouter.top/assets/visactor-NF6fGqmK.js
+[2025-12-24 08:43:18] [REQ] POST https://anyrouter.top/api/user/sign_in
+[2025-12-24 08:43:19] [RES] 200 https://anyrouter.top/api/user/sign_in
+[2025-12-24 08:43:19]    JSON: {"message":"","success":true}...
+[2025-12-24 08:43:19] [REQ] GET https://anyrouter.top/api/user/self
+[2025-12-24 08:43:19] [REQ] GET https://anyrouter.top/api/data/self/?start_timestamp=1766450599&end_timestamp=1766540599&default_time=hour
+[2025-12-24 08:43:19] [RES] 301 https://anyrouter.top/api/data/self/?start_timestamp=1766450599&end_timestamp=1766540599&default_time=hour
+[2025-12-24 08:43:19] [REQ] GET https://anyrouter.top/api/data/self?start_timestamp=1766450599&end_timestamp=1766540599&default_time=hour
+[2025-12-24 08:43:19] [RES] 200 https://anyrouter.top/api/user/self
+[2025-12-24 08:43:19]    JSON: {"data":{"id":91843,"username":"evacc","password":"","original_password":"","display_name":"evacc","role":1,"status":1,"email":"chenqihui21037@s.nuit.edu.cn","github_id":"","github_user_id":0,"oidc_id...
+[2025-12-24 08:43:20] [RES] 200 https://anyrouter.top/api/data/self?start_timestamp=1766450599&end_timestamp=1766540599&default_time=hour
+[2025-12-24 08:43:20]    JSON: {"data":[{"id":3534607,"user_id":91843,"username":"evacc","model_name":"claude-sonnet-4-5-20250929","created_at":1766451600,"token_used":40474,"count":40,"quota":2126744},{"id":3534650,"user_id":91843...
+[2025-12-24 08:43:20] [REQ] GET https://anyrouter.top/api/uptime/status
+[2025-12-24 08:43:20] [RES] 200 https://anyrouter.top/api/uptime/status
+[2025-12-24 08:43:20]    JSON: {"data":[],"message":"","success":true}...
+[2025-12-24 08:43:26] 当前 URL: https://anyrouter.top/console
+[2025-12-24 08:43:26] [OK] 登录成功 (用户: evacc, ID: 91843)
+[2025-12-24 08:43:26] 
+============================================================
+[2025-12-24 08:43:26] 所有 API 请求列表：
+[2025-12-24 08:43:26] ============================================================
+[2025-12-24 08:43:26] 
+[*] GET https://anyrouter.top/api/notice
+[2025-12-24 08:43:26] 
+[*] GET https://anyrouter.top/api/status
+[2025-12-24 08:43:26] 
+[*] GET https://anyrouter.top/api/notice
+[2025-12-24 08:43:26] 
+[*] POST https://anyrouter.top/api/user/login?turnstile=
+[2025-12-24 08:43:26]    请求体: {"username":"evacc","password":"Any192102-"}
+[2025-12-24 08:43:26] 
+[*] POST https://anyrouter.top/api/user/sign_in
+[2025-12-24 08:43:26] 
+[*] GET https://anyrouter.top/api/user/self
+[2025-12-24 08:43:26] 
+[*] GET https://anyrouter.top/api/data/self/?start_timestamp=1766450599&end_timestamp=1766540599&default_time=hour
+[2025-12-24 08:43:26] 
+[*] GET https://anyrouter.top/api/data/self?start_timestamp=1766450599&end_timestamp=1766540599&default_time=hour
+[2025-12-24 08:43:26] 
+[*] GET https://anyrouter.top/api/uptime/status
+[2025-12-24 08:43:26] ============================================================
+[2025-12-24 08:43:26] 
+等待 30 秒供观察，按 Ctrl+C 可提前结束...
+Exception ignored in: <function _ProactorBasePipeTransport.__del__ at 0x0000019245019580>
+Traceback (most recent call last):
+  File "C:\Users\admin\AppData\Roaming\uv\python\cpython-3.12.11-windows-x86_64-none\Lib\asyncio\proactor_events.py", line 116, in __del__
+    _warn(f"unclosed transport {self!r}", ResourceWarning, source=self)
+                               ^^^^^^^^
+  File "C:\Users\admin\AppData\Roaming\uv\python\cpython-3.12.11-windows-x86_64-none\Lib\asyncio\proactor_events.py", line 80, in __repr__
+    info.append(f'fd={self._sock.fileno()}')
+                      ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\admin\AppData\Roaming\uv\python\cpython-3.12.11-windows-x86_64-none\Lib\asyncio\windows_utils.py", line 102, in fileno
+    raise ValueError("I/O operation on closed pipe")
+ValueError: I/O operation on closed pipe
+Exception ignored in: <function BaseSubprocessTransport.__del__ at 0x0000019244FFBC40>
+Traceback (most recent call last):
+  File "C:\Users\admin\AppData\Roaming\uv\python\cpython-3.12.11-windows-x86_64-none\Lib\asyncio\base_subprocess.py", line 125, in __del__
+    _warn(f"unclosed transport {self!r}", ResourceWarning, source=self)
+                               ^^^^^^^^
+  File "C:\Users\admin\AppData\Roaming\uv\python\cpython-3.12.11-windows-x86_64-none\Lib\asyncio\base_subprocess.py", line 70, in __repr__
+    info.append(f'stdin={stdin.pipe}')
+                        ^^^^^^^^^^^^
+  File "C:\Users\admin\AppData\Roaming\uv\python\cpython-3.12.11-windows-x86_64-none\Lib\asyncio\proactor_events.py", line 80, in __repr__
+    info.append(f'fd={self._sock.fileno()}')
+                      ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\admin\AppData\Roaming\uv\python\cpython-3.12.11-windows-x86_64-none\Lib\asyncio\windows_utils.py", line 102, in fileno
+    raise ValueError("I/O operation on closed pipe")
+ValueError: I/O operation on closed pipe

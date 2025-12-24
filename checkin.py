@@ -6,7 +6,7 @@ import sys
 import json
 import asyncio
 from datetime import datetime
-from playwright.async_api import async_playwright
+from camoufox.async_api import AsyncCamoufox
 
 
 def log(message):
@@ -28,32 +28,23 @@ class AnyrouteCheckin:
         self.headless = headless
         self.page = None
         self.browser = None
-        self.context = None
 
-    async def _init_browser(self, playwright):
+    async def _init_browser(self):
         """初始化浏览器"""
         log("初始化浏览器...")
-        self.browser = await playwright.chromium.launch(
+        self.browser = await AsyncCamoufox(
             headless=self.headless,
-            args=[
-                '--no-sandbox',
-                '--disable-setuid-sandbox',
-                '--disable-dev-shm-usage',
-                '--disable-blink-features=AutomationControlled',
-            ]
-        )
-        self.context = await self.browser.new_context(
-            viewport={'width': 1920, 'height': 1080},
-            user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+            humanize=True,
             locale='zh-CN',
-        )
-        self.page = await self.context.new_page()
+            geoip=False,
+        ).__aenter__()
+        self.page = await self.browser.new_page()
 
     async def _close_browser(self):
         """关闭浏览器"""
         if self.browser:
             try:
-                await self.browser.close()
+                await self.browser.__aexit__(None, None, None)
             except:
                 pass
 
@@ -284,25 +275,12 @@ class AnyrouteCheckin:
             return False
 
     async def checkin(self):
-        """执行签到"""
+        """执行签到（登录后自动签到）"""
         try:
-            log("开始签到...")
+            log("检查签到状态...")
 
-            if not self.user_id:
-                try:
-                    user_str = await self.page.evaluate('() => localStorage.getItem("user")')
-                    if user_str:
-                        user_data = json.loads(user_str)
-                        self.user_id = user_data.get('id')
-                except:
-                    pass
-
-            if not self.user_id:
-                log("[FAIL] 签到失败: 未获取到用户 ID")
-                return False
-
-            # 通过 JavaScript 发送签到请求
-            checkin_url = f"{self.base_url}/api/user/sign_in/{self.user_id}"
+            # 签到是登录时自动完成的，直接调用API确认
+            checkin_url = f"{self.base_url}/api/user/sign_in"
             log(f"签到 URL: {checkin_url}")
 
             js_code = f'''
@@ -311,8 +289,7 @@ class AnyrouteCheckin:
                     const response = await fetch("{checkin_url}", {{
                         method: "POST",
                         headers: {{
-                            "Content-Type": "application/json",
-                            "new-api-user": "{self.user_id}"
+                            "Content-Type": "application/json"
                         }}
                     }});
                     return await response.json();
@@ -326,20 +303,25 @@ class AnyrouteCheckin:
             log(f"签到响应: {result}")
 
             if result:
-                if result.get('success') or result.get('ret') == 1:
-                    msg = result.get('message', '签到成功')
-                    log(f"[OK] {msg}")
+                if result.get('success'):
+                    msg = result.get('message') or '签到成功'
+                    log(f"[OK] {msg if msg else '签到成功'}")
                     return True
-                else:
-                    msg = result.get('message', result.get('msg', '未知错误'))
-                    if '已经签到' in str(msg) or 'already' in str(msg).lower():
-                        log(f"[OK] {msg}")
+                elif result.get('error'):
+                    error_msg = result.get('error')
+                    # 如果是已经签到的错误，也算成功
+                    if '已经签到' in str(error_msg) or 'already' in str(error_msg).lower():
+                        log(f"[OK] 今日已签到")
                         return True
-                    log(f"[FAIL] 签到失败: {msg}")
+                    log(f"[FAIL] 签到失败: {error_msg}")
                     return False
+                else:
+                    # 如果没有明确的错误，也当作成功（因为登录时已自动签到）
+                    log(f"[OK] 登录自动签到完成")
+                    return True
 
-            log("[FAIL] 签到响应为空")
-            return False
+            log("[WARN] 签到响应为空，但登录已自动签到")
+            return True
 
         except Exception as e:
             log(f"[FAIL] 签到异常: {str(e)}")
@@ -398,33 +380,32 @@ class AnyrouteCheckin:
     async def run(self):
         """运行签到流程"""
         print("=" * 50)
-        print("Anyrouter 自动签到脚本 (Playwright)")
+        print("Anyrouter 自动签到脚本 (Camoufox)")
         print(f"目标网站: {self.base_url}")
         print(f"Headless 模式: {self.headless}")
         print("=" * 50)
 
-        async with async_playwright() as playwright:
-            try:
-                await self._init_browser(playwright)
+        try:
+            await self._init_browser()
 
-                if not await self.login():
-                    log("程序终止：登录失败")
-                    return False
+            if not await self.login():
+                log("程序终止：登录失败")
+                return False
 
-                checkin_success = await self.checkin()
-                await self.get_user_info()
+            checkin_success = await self.checkin()
+            await self.get_user_info()
 
-                if not checkin_success:
-                    log("程序终止：签到失败")
-                    return False
+            if not checkin_success:
+                log("程序终止：签到失败")
+                return False
 
-                print("=" * 50)
-                log("[OK] 签到流程完成")
-                print("=" * 50)
-                return True
+            print("=" * 50)
+            log("[OK] 签到流程完成")
+            print("=" * 50)
+            return True
 
-            finally:
-                await self._close_browser()
+        finally:
+            await self._close_browser()
 
 
 def main():

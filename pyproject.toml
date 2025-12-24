@@ -2,10 +2,8 @@
 name = "check-in"
 version = "0.1.0"
 description = "Add your description here"
-requires-python = ">=3.12"
+requires-python = ">=3.11"
 dependencies = [
-    "cloudscraper>=1.2.71",
-    "drissionpage>=4.1.1.2",
-    "playwright>=1.57.0",
+    "camoufox[geoip]>=0.4.11",
     "requests>=2.32.5",
 ]

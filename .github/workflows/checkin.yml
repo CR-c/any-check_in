@@ -16,6 +16,7 @@ on:
 jobs:
   checkin:
     runs-on: ubuntu-latest
+    environment: production  # 指定使用 production 环境
 
     # 添加必要的权限
     permissions:

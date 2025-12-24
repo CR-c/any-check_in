@@ -515,7 +515,11 @@ class AnyrouteCheckin:
                             "Content-Type": "application/json"
                         }}
                     }});
-                    return await response.json();
+                    const data = await response.json();
+                    return {{
+                        status: response.status,
+                        data: data
+                    }};
                 }} catch (e) {{
                     return {{error: e.message}};
                 }}
@@ -525,26 +529,39 @@ class AnyrouteCheckin:
             result = await self.page.evaluate(js_code)
             log(f"签到响应: {result}")
 
-            if result:
-                if result.get('success'):
-                    msg = result.get('message') or '签到成功'
-                    log(f"[OK] {msg if msg else '签到成功'}")
-                    return True
-                elif result.get('error'):
-                    error_msg = result.get('error')
-                    # 如果是已经签到的错误，也算成功
-                    if '已经签到' in str(error_msg) or 'already' in str(error_msg).lower():
-                        log(f"[OK] 今日已签到")
-                        return True
-                    log(f"[FAIL] 签到失败: {error_msg}")
-                    return False
-                else:
-                    # 如果没有明确的错误，也当作成功（因为登录时已自动签到）
-                    log(f"[OK] 登录自动签到完成")
-                    return True
+            # 检查是否有网络错误
+            if result and result.get('error'):
+                error_msg = result.get('error')
+                log(f"[FAIL] 网络请求失败: {error_msg}")
+                return False
 
-            log("[WARN] 签到响应为空，但登录已自动签到")
-            return True
+            # 检查 HTTP 状态码
+            status = result.get('status') if result else None
+            data = result.get('data') if result else None
+
+            if not data:
+                log("[FAIL] API 响应为空，签到状态未知")
+                return False
+
+            # 判断 API 返回的 success 字段
+            if data.get('success') is True:
+                msg = data.get('message', '签到成功')
+                log(f"[OK] {msg}")
+                return True
+            elif data.get('success') is False:
+                # API 明确返回失败
+                msg = data.get('message', '未知错误')
+                # 检查是否是"已经签到"的错误
+                if '已经签到' in str(msg) or 'already' in str(msg).lower():
+                    log(f"[OK] 今日已签到")
+                    return True
+                log(f"[FAIL] 签到失败: {msg}")
+                return False
+            else:
+                # success 字段不存在或不是布尔值
+                log(f"[WARN] API 响应格式异常: {data}")
+                log("[FAIL] 无法确认签到状态")
+                return False
 
         except Exception as e:
             log(f"[FAIL] 签到异常: {str(e)}")

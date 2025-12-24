@@ -24,15 +24,18 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
-          cache: 'pip'
+          python-version: '3.12'
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
 
       - name: Install dependencies
         run: |
-          pip install --upgrade pip
-          pip install -r requirements.txt
-          playwright install chromium
-          playwright install-deps chromium
+          uv sync
+          uv run playwright install chromium
+          uv run playwright install-deps chromium
 
       - name: Show current time
         run: |
@@ -44,7 +47,7 @@ jobs:
           ANYROUTE_PASSWORD: ${{ secrets.ANYROUTE_PASSWORD }}
           ANYROUTE_BASE_URL: ${{ secrets.ANYROUTE_BASE_URL }}
         run: |
-          python checkin.py
+          uv run python checkin.py
 
       - name: Check-in completed
         if: success()

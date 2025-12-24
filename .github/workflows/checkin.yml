@@ -51,7 +51,8 @@ jobs:
       - name: Run check-in script
         env:
           # GitHub 环境变量（用于检查今日签到状态）
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # 使用 GH_PAT 如果已设置，否则回退到默认的 GITHUB_TOKEN
+          GITHUB_TOKEN: ${{ secrets.GH_PAT || secrets.GITHUB_TOKEN }}
           GITHUB_REPOSITORY: ${{ github.repository }}
 
           # 多账号模式（推荐）：设置 ACCOUNTS secret，格式为 JSON 数组

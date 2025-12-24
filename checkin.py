@@ -6,6 +6,7 @@ import sys
 import json
 import asyncio
 import smtplib
+import requests
 from datetime import datetime
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
@@ -21,6 +22,110 @@ def log(message):
     except UnicodeEncodeError:
         safe_msg = message.replace('✓', '[OK]').replace('✗', '[FAIL]')
         print(f"[{timestamp}] {safe_msg}")
+
+
+def check_today_success():
+    """检查今天是否已经成功签到过"""
+    github_token = os.environ.get('GITHUB_TOKEN')
+    github_repository = os.environ.get('GITHUB_REPOSITORY')
+
+    # 如果不在 GitHub Actions 环境中，跳过检查
+    if not github_token or not github_repository:
+        log("未在 GitHub Actions 环境中，跳过今日签到检查")
+        return False
+
+    try:
+        today = datetime.now().strftime('%Y-%m-%d')
+
+        # 使用 GitHub API 获取 repository variable
+        api_url = f"https://api.github.com/repos/{github_repository}/actions/variables/LAST_SUCCESS_DATE"
+        headers = {
+            'Authorization': f'token {github_token}',
+            'Accept': 'application/vnd.github.v3+json'
+        }
+
+        response = requests.get(api_url, headers=headers, timeout=10)
+
+        if response.status_code == 200:
+            data = response.json()
+            last_success_date = data.get('value', '')
+
+            if last_success_date == today:
+                log(f"[INFO] 今日 ({today}) 已经成功签到，跳过本次执行")
+                return True
+            else:
+                log(f"[INFO] 上次成功签到日期: {last_success_date}，继续执行")
+                return False
+        elif response.status_code == 404:
+            log("[INFO] 未找到签到记录，首次执行")
+            return False
+        else:
+            log(f"[WARN] 获取签到记录失败: {response.status_code}")
+            return False
+
+    except Exception as e:
+        log(f"[WARN] 检查今日签到状态异常: {str(e)}")
+        return False
+
+
+def update_success_date():
+    """更新今日签到成功的日期"""
+    github_token = os.environ.get('GITHUB_TOKEN')
+    github_repository = os.environ.get('GITHUB_REPOSITORY')
+
+    # 如果不在 GitHub Actions 环境中，跳过更新
+    if not github_token or not github_repository:
+        log("未在 GitHub Actions 环境中，跳过更新签到日期")
+        return False
+
+    try:
+        today = datetime.now().strftime('%Y-%m-%d')
+
+        # 检查 variable 是否存在
+        api_url = f"https://api.github.com/repos/{github_repository}/actions/variables/LAST_SUCCESS_DATE"
+        headers = {
+            'Authorization': f'token {github_token}',
+            'Accept': 'application/vnd.github.v3+json'
+        }
+
+        # 先尝试获取
+        response = requests.get(api_url, headers=headers, timeout=10)
+
+        if response.status_code == 200:
+            # Variable 存在，更新
+            patch_url = api_url
+            data = {'value': today}
+            response = requests.patch(patch_url, json=data, headers=headers, timeout=10)
+
+            if response.status_code == 204:
+                log(f"[OK] 已更新签到日期: {today}")
+                return True
+            else:
+                log(f"[WARN] 更新签到日期失败: {response.status_code}")
+                return False
+
+        elif response.status_code == 404:
+            # Variable 不存在，创建
+            create_url = f"https://api.github.com/repos/{github_repository}/actions/variables"
+            data = {
+                'name': 'LAST_SUCCESS_DATE',
+                'value': today
+            }
+            response = requests.post(create_url, json=data, headers=headers, timeout=10)
+
+            if response.status_code == 201:
+                log(f"[OK] 已创建签到日期记录: {today}")
+                return True
+            else:
+                log(f"[WARN] 创建签到日期记录失败: {response.status_code}")
+                return False
+        else:
+            log(f"[WARN] 检查签到日期状态失败: {response.status_code}")
+            return False
+
+    except Exception as e:
+        log(f"[WARN] 更新签到日期异常: {str(e)}")
+        return False
 
 
 def send_email(results):
@@ -583,6 +688,13 @@ async def run_account_checkin(account, base_url, headless):
 
 async def main_async():
     """异步主函数"""
+    # 检查今天是否已经成功签到过
+    if check_today_success():
+        print("\n" + "=" * 50)
+        print("今日已成功签到，跳过本次执行")
+        print("=" * 50)
+        return True  # 返回 True 表示无需执行（而非失败）
+
     # 加载账号配置
     accounts = load_accounts()
     if not accounts:
@@ -658,13 +770,19 @@ async def main_async():
     print(f"  失败: {fail_count}")
     print("=" * 50)
 
+    # 全部成功时更新今日签到日期
+    all_success = (fail_count == 0)
+    if all_success:
+        log("所有账号签到成功，更新今日签到记录")
+        update_success_date()
+
     # 发送邮件通知
     if success_count > 0:  # 只有成功的签到才发送邮件
         print("\n" + "=" * 50)
         send_email(results)
         print("=" * 50)
 
-    return fail_count == 0
+    return all_success
 
 
 def main():

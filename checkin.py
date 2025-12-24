@@ -132,7 +132,7 @@ def send_email(results):
     """发送签到结果邮件通知"""
     # 读取邮件配置
     smtp_server = os.environ.get('SMTP_SERVER')
-    smtp_port = int(os.environ.get('SMTP_PORT', '587'))
+    smtp_port = int(os.environ.get('SMTP_PORT') or '587')
     smtp_user = os.environ.get('SMTP_USER')
     smtp_password = os.environ.get('SMTP_PASSWORD')
     email_to = os.environ.get('EMAIL_TO')
@@ -776,11 +776,15 @@ async def main_async():
         log("所有账号签到成功，更新今日签到记录")
         update_success_date()
 
-    # 发送邮件通知
+    # 发送邮件通知（失败不影响整体结果）
     if success_count > 0:  # 只有成功的签到才发送邮件
-        print("\n" + "=" * 50)
-        send_email(results)
-        print("=" * 50)
+        try:
+            print("\n" + "=" * 50)
+            send_email(results)
+            print("=" * 50)
+        except Exception as e:
+            log(f"[WARN] 邮件发送失败: {str(e)}")
+            print("=" * 50)
 
     return all_success
 

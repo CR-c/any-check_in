@@ -708,12 +708,13 @@ async def run_account_checkin(account, default_base_url, headless):
 
 async def main_async():
     """异步主函数"""
-    # 检查今天是否已经成功签到过
-    if check_today_success():
-        print("\n" + "=" * 50)
-        print("今日已成功签到，跳过本次执行")
-        print("=" * 50)
-        return True  # 返回 True 表示无需执行（而非失败）
+    # 注释掉当日签到检查，因为网站签到重置时间不确定
+    # 每次执行都尝试签到，依靠网站 API 返回"已签到"来判断
+    # if check_today_success():
+    #     print("\n" + "=" * 50)
+    #     print("今日已成功签到，跳过本次执行")
+    #     print("=" * 50)
+    #     return True  # 返回 True 表示无需执行（而非失败）
 
     # 加载账号配置
     accounts = load_accounts()
@@ -790,11 +791,11 @@ async def main_async():
     print(f"  失败: {fail_count}")
     print("=" * 50)
 
-    # 全部成功时更新今日签到日期
+    # 全部成功时更新今日签到日期（已禁用，因为不再检查当日签到）
     all_success = (fail_count == 0)
-    if all_success:
-        log("所有账号签到成功，更新今日签到记录")
-        update_success_date()
+    # if all_success:
+    #     log("所有账号签到成功，更新今日签到记录")
+    #     update_success_date()
 
     # 发送邮件通知（失败不影响整体结果）
     if success_count > 0:  # 只有成功的签到才发送邮件

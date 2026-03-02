@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+import gc
 import os
 import sys
 import json
@@ -806,6 +807,10 @@ async def main_async():
         except Exception as e:
             log(f"[WARN] 邮件发送失败: {str(e)}")
             print("=" * 50)
+
+    # 在事件循环关闭前触发垃圾回收，清理浏览器子进程的 transport，
+    # 避免 asyncio.run() 关闭事件循环后 GC 触发 "Event loop is closed" 错误
+    gc.collect()
 
     return all_success
 
